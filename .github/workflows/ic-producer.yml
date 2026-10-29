@@ -1,0 +1,26 @@
+name: ic-producer
+on:
+  issue_comment:
+    types: [created]
+permissions:
+  contents: read
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request != ''
+    steps:
+      - name: Restore cached git repository
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: .git
+          key: git-repo
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Push normally (mirror of target step)
+        env:
+          BOT_TOKEN: ${{ secrets.TEST_TOKEN }}
+        run: |
+          git remote set-url origin "https://x-access-token:${BOT_TOKEN}@github.com/${{ github.repository }}.git"
+          git remote -v | sed -E 's#x-access-token:[^@]+@#x-access-token:<redacted>@#'
